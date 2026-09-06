@@ -1,0 +1,4 @@
+hello
+world
+godric   seat0        2026-09-06 18:28
+godric   tty2         2026-09-06 18:28
