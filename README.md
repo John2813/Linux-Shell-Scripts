@@ -1,155 +1,155 @@
-# Bash 脚本编程核心知识指南
+# Bash Scripting Core Knowledge Guide
 
-本手册基于示例脚本整理，涵盖了 Bash 脚本开发中基础且关键的语法特性与实用技巧，包含变量类型与操作、字符串处理、控制结构、IO 重定向、函数定义及条件测试等模块。
-
----
-
-### 一、 变量定义与数据类型
-
-* **变量定义与销毁**
-  * **基本赋值**: 格式为 `var_name="value"`，注意**等号两边不能有空格**。
-  * **变量引用**: 推荐使用 `${var_name}` 的形式进行明确界定。
-  * **变量取消/销毁**: 使用 `unset var_name` 清除变量（只读变量无法取消）。
-  * **只读变量**: 可通过 `readonly var_name` 或 `declare -r var_name` 声明，禁止二次修改或取消。
-
-* **数据类型与 `declare` 显式声明**
-  * **整数类型**: `declare -i count=100`。
-  * **普通索引数组**: `declare -a array_name=(val1 val2 val3)`，元素之间以**空格**分隔。
-  * **关联数组（键值对/字典）**: `declare -A assoc_array`，如 `assoc_array[key]="value"`。
-  * **环境变量导出**: 使用 `export VAR="val"` 或 `declare -x VAR="val"`。
-
-* **特殊与预定义变量**
-  * `$0`: 当前脚本的文件名/路径。
-  * `$1`, `$2`: 命令行或函数传入的第 1、2 个参数。
-  * `$#`: 传递给脚本或函数的参数总个数。
-  * `$*`: 将所有参数合并为一个单字符串。
-  * `$@`: 将所有参数保留为独立的字符串列表。
-  * `$$`: 当前 Bash 进程的 PID。
-  * `$?`: 上一条命令的退出状态码（0 表示成功，非 0 表示异常）。
-  * `$-`: 当前 Shell 运行的模式标志。
+This guide synthesizes key concepts and practical techniques for Bash shell scripting based on example scripts. It covers variable types, string manipulation, control structures, I/O redirection, pipeline processing, function definitions, and conditional testing.
 
 ---
 
-### 二、 字符串与数组高级操作
+### 1. Variables and Data Types
 
-* **单引号与双引号的区别**
-  * **单引号 `' '`**: 强引用，内部所有字符均按字面含义解释，不进行变量替换或转义。
-  * **双引号 `" "`**: 弱引用，允许在内部解析变量（如 `"${var}"`）及转义字符。
+* **Variable Definition and Lifecycle**
+  * **Assignment**: Use `var_name="value"`. **Do not place spaces around the `=` sign**.
+  * **Referencing**: Use `${var_name}` for unambiguous variable expansion.
+  * **Unsetting**: Use `unset var_name` to remove a variable (readonly variables cannot be unset).
+  * **Read-only Variables**: Declare using `readonly var_name` or `declare -r var_name` to prevent re-assignment or deletion.
 
-* **字符串常用切片与操作**
-  * **获取长度**: `${#var_name}`（包括空格在内的总字符数）。
-  * **提取子串**: `${var:start:length}`，例如 `${var:1:6}` 取出从索引 1 开始的 6 个字符。
-  * **查找字符位置**: `expr index "$var" "sc"`，返回目标字符集中任意字符首次出现的位置（索引从 1 开始）。
+* **Explicit Declarations with `declare`**
+  * **Integers**: `declare -i count=100`
+  * **Indexed Arrays**: `declare -a array_name=(val1 val2 val3)` (elements separated by spaces).
+  * **Associative Arrays (Key-Value Pairs)**: `declare -A assoc_array`, e.g., `assoc_array[key]="value"`.
+  * **Exporting Environment Variables**: `export VAR="val"` or `declare -x VAR="val"`.
 
-* **数组遍历与常用操作**
-  * **获取单元素**: `${array[0]}` 或 `${assoc_array[key]}`。
-  * **读取所有元素**: `${array[@]}` 或 `${array[*]}`。
-  * **获取数组长度（元素个数）**: `${#array[@]}` 或 `${#array[*]}`。
-  * **获取关联数组的所有键 (Keys)**: `${!assoc_array[@]}`。
-
----
-
-### 三、 基础语法与输出格式
-
-* **基础输出与格式化 (`echo` 与 `printf`)**
-  * `echo`: 支持扩展选项，如 `-n`（取消末尾换行）与 `-e`（启用转义字符解析）。
-  * **ANSI 彩色输出**: 可通过 `\033[31m`（设置前景色/背景色）与 `\033[0m`（重置样式）实现终端彩色渲染。
-  * `printf`: 提供类 C 语言的格式化输出，支持指定文本宽度（`%-10s` 居左/居右）、补零（`%04d`）、浮点数精度（`%.2f`）以及打印多列表格数据。
-
-* **命令替换与文件引入**
-  * 使用 `$(command)` 或 `` `command` `` 执行命令并获取返回值（推荐使用 `$()`）。
-  * 通过 `source ./filename` 或 `. ./filename` 引入外部脚本，被引入文件仅需可读权限（`-r`），无需执行权限（`-x`）。
+* **Special and Predefined Variables**
+  * `$0`: Name or path of the current script.
+  * `$1`, `$2`: First and second positional arguments passed to the script or function.
+  * `$#`: Total number of positional arguments.
+  * `$*`: All positional arguments concatenated into a single string.
+  * `$@`: All positional arguments as separate double-quoted strings.
+  * `$$`: Process ID (PID) of the current Shell process.
+  * `$?`: Exit status of the last executed command (0 indicates success, non-zero indicates an error).
+  * `$-`: Current Shell invocation flags/options.
 
 ---
 
-### 四、 运算符与条件测试
+### 2. Advanced String and Array Operations
 
-* **算术与递增运算**
-  * **表达式算术**: 可使用 `expr $a + $b`（运算符两侧必须加空格，乘法需要转义 `\*`）。
-  * **高效算术**: 使用 `((a++))`、`$((a + b))` 结构进行数值运算，无需调用外部命令。
-  * **赋值递增**: 使用 `let num++` 或 `let num--` 实现直接自增/自减。
+* **Single Quotes vs. Double Quotes**
+  * **Single Quotes (`' '`)**: Strong quoting. All characters are treated literally; variable expansion and escape sequences are disabled.
+  * **Double Quotes (`" "`)**: Weak quoting. Allows variable expansion (e.g., `"${var}"`) and command substitution.
 
-* **条件判断与测试表达式**
-  * **文件检测算子**:
-    * `-e`: 文件/目录是否存在
-    * `-f`: 是否为普通文件
-    * `-d`: 是否为目录
-    * `-r` / `-w` / `-x`: 检查读/写/执行权限
-    * `-s`: 文件大小是否大于 0（非空）
-  * **数值比较**:
-    * `-eq` (等于), `-ne` (不等于), `-gt` (大于), `-ge` (大于等于), `-lt` (小于), `-le` (小于等于)
-  * **字符串比较**:
-    * `=` 或 `==` (相等), `!=` (不等)
-    * `-z`: 字符串长度是否为 0
-    * `-n`: 字符串长度是否不为 0
-  * **高级测试结构**:
-    * `[ EXPRESSION ]`: 传统测试表达式，布尔操作符使用 `!`, `-a` (与), `-o` (或)。
-    * `[[ EXPRESSION ]]`: 增强型测试，支持通配符模式匹配（如 `[[ "$file" == *.log ]]`）与高级逻辑运算符 `&&` / `||`。
-    * `(( EXPRESSION ))`: 专用于数值条件判断，支持直观的数学比较（如 `(( $count > 10 ))`）。
+* **String Manipulation**
+  * **String Length**: `${#var_name}` (counts total characters, including spaces).
+  * **Substring Extraction**: `${var:start:length}`, e.g., `${var:1:6}` extracts 6 characters starting from index 1.
+  * **Character Location**: `expr index "$var" "sc"` returns the 1-based index of the first matching character from the search set.
+
+* **Array Operations**
+  * **Accessing Elements**: `${array[0]}` or `${assoc_array[key]}`
+  * **Expanding All Elements**: `${array[@]}` or `${array[*]}`
+  * **Array Element Count**: `${#array[@]}` or `${#array[*]}`
+  * **Keys of Associative Array**: `${!assoc_array[@]}`
 
 ---
 
-### 五、 流程控制
+### 3. Basic Syntax and Formatting
 
-* **分支结构 (`if` / `case`)**
-  * `if-elif-else`: 必须以 `if` 开头，`then` 承接，`fi` 闭合。分支内不可留空。
-  * `case-esac`: 用于多值匹配，每个分支匹配项以 `)` 开始，以 `;;` 结束，`*)` 匹配默认情况。
+* **Output and Formatting (`echo` and `printf`)**
+  * `echo`: Supports flags like `-n` (omit trailing newline) and `-e` (enable interpretation of backslash escapes).
+  * **ANSI Color Codes**: Render styled terminal output using escape sequences like `\033[31m` (foreground/background styling) and `\033[0m` (reset formatting).
+  * `printf`: Provides C-style formatted output. Supports field width/alignment (`%-10s`), zero-padding (`%04d`), floating-point precision (`%.2f`), and tabular formatting.
 
-* **循环结构 (`for` / `while` / `until`)**
-  * `for`: 遍历数组或序列（如 `for i in ${arr[@]}` 或 `for i in {1..20}`）。
-  * `while`: 当条件为真时持续循环。死循环写法：`while :` 或 `while true`。
-  * `until`: 当条件为假时持续循环，直到条件变为真。
-  * **控制指令**: 支持 `break` 与 `continue` 跳出或继续循环。
-
----
-
-### 六、 函数与局部变量
-
-* **函数定义与数据传递**
-  * 语法形式: `func_name() { ... }` 或 `function func_name() { ... }`。
-  * **参数获取**: 函数内部使用 `$1`, `$2` 获取传入参数，使用 `$#` 获取参数量。
-  * **作用域管理**: 使用 `local` 关键字在函数内申明局部变量（如 `local a="$1"`），避免污染全局作用域。
-  * **返回值标准**:
-    * `return`: 仅用于返回函数的退出状态码（0-255）。
-    * `echo` / `printf`: 用于向标准输出传递数据，外部调用者可通过 `result=$(func_name)` 捕获输出文本。
+* **Command Substitution and File Inclusion**
+  * Command substitution: Use `$(command)` or `` `command` `` to capture output (syntax `$(...)` is preferred).
+  * Script sourcing: Include external files via `source ./filename` or `. ./filename`. The target file only requires read permission (`-r`), not execution permission (`-x`).
 
 ---
 
-### 七、 输入输出重定向与管道 (Pipeline & Redirection)
+### 4. Operators and Conditional Testing
 
-* **标准流与文件描述符 (File Descriptors)**
-  * `0`: Standard Input (stdin，标准输入)
-  * `1`: Standard Output (stdout，标准输出)
-  * `2`: Standard Error (stderr，标准错误输出)
+* **Arithmetic and Increments**
+  * **Command Evaluation**: `expr $a + $b` (operators must be space-separated; multiplication requires escape `\*`).
+  * **Built-in Arithmetic**: Use `((a++))` or `$((a + b))` for efficient integer evaluation without external subshells.
+  * **Assignment Increment**: Use `let num++` or `let num--`.
 
-* **文件重定向技巧**
-  * `>` 与 `>>`: 覆盖或追加 stdout 到文件。
-  * `<`: 将文件内容作为 stdin 传入命令。
-  * `2>file`: 将 stderr 重定向至指定文件。
-  * `> file 2>&1` 或 `&> file`: 将 stdout 与 stderr 合并重定向至同一文件。
-  * `/dev/null`: 黑洞设备，常用于丢弃不必要的输出或错误信息（如 `command > /dev/null 2>&1`）。
+* **Test Expressions and Conditions**
+  * **File Test Operators**:
+    * `-e`: Path exists
+    * `-f`: Regular file
+    * `-d`: Directory
+    * `-r` / `-w` / `-x`: Read / Write / Execute permissions
+    * `-s`: Non-empty file (size > 0)
+  * **Numeric Comparisons**:
+    * `-eq` (equal), `-ne` (not equal), `-gt` (greater than), `-ge` (greater or equal), `-lt` (less than), `-le` (less or equal)
+  * **String Comparisons**:
+    * `=` or `==` (equal), `!=` (not equal)
+    * `-z`: String length is zero
+    * `-n`: String length is non-zero
+  * **Conditional Structures**:
+    * `[ EXPRESSION ]`: POSIX standard test block. Logical operators use `!` (NOT), `-a` (AND), `-o` (OR).
+    * `[[ EXPRESSION ]]`: Extended test block supporting wildcard pattern matching (e.g., `[[ "$file" == *.log ]]`) and operators `&&` / `||`.
+    * `(( EXPRESSION ))`: Dedicated arithmetic evaluation block supporting standard mathematical syntax (e.g., `(( $count > 10 ))`).
 
-* **管道 (`|`) 机制**
-  * **数据传递**: 管道采用先进先出 (FIFO) 机制，将前一个命令的标准输出 (stdout) 链接并作为下一个命令的标准输入 (stdin)。
-  * **流过滤组合**: 结合 `grep`、`wc` 等文本处理工具可以构建高效的数据管道，例如：
+---
+
+### 5. Control Flow
+
+* **Branching (`if` / `case`)**
+  * `if-elif-else`: Syntax requires `if`, `then`, and closing `fi`. Empty conditional branches are invalid.
+  * `case-esac`: Pattern matching syntax. Each pattern ends with `)`, blocks terminate with `;;`, and `*)` acts as the default fallback.
+
+* **Loops (`for` / `while` / `until`)**
+  * `for`: Iterates over lists or ranges (e.g., `for i in ${arr[@]}` or `for i in {1..20}`).
+  * `while`: Loops as long as the test condition succeeds (returns 0). Infinite loop syntax: `while :` or `while true`.
+  * `until`: Loops until the test condition succeeds.
+  * **Control Statements**: `break` and `continue` function identically to standard C control constructs.
+
+---
+
+### 6. Functions and Scope
+
+* **Function Definition and Parameter Handling**
+  * Syntax: `func_name() { ... }` or `function func_name() { ... }`.
+  * **Positional Parameters**: Inside functions, `$1`, `$2` refer to passed arguments, and `$#` represents argument count.
+  * **Local Variables**: Declare internal variables using `local` (e.g., `local a="$1"`) to prevent polluting the global scope.
+  * **Return Values**:
+    * `return`: Sets the function's exit status code (0–255).
+    * `echo` / `printf`: Used to pass output back to the caller (captured via command substitution `result=$(func_name)`).
+
+---
+
+### 7. Input/Output Redirection and Pipelines
+
+* **Standard Streams and File Descriptors**
+  * `0`: Standard Input (stdin)
+  * `1`: Standard Output (stdout)
+  * `2`: Standard Error (stderr)
+
+* **Redirection Operators**
+  * `>` and `>>`: Redirect stdout to a file (overwrite or append).
+  * `<`: Read stdin from a file.
+  * `2>file`: Redirect stderr to a file.
+  * `> file 2>&1` or `&> file`: Combine stdout and stderr into the same output file.
+  * `/dev/null`: Null device used to discard unwanted output streams (e.g., `command > /dev/null 2>&1`).
+
+* **Pipelines (`|`)**
+  * Passes stdout of the preceding command directly as stdin to the next command using a FIFO pipe mechanism.
+  * Pipe chaining example:
     ```bash
-    bash echo.sh | grep Today    # 捕获脚本输出并筛选含有 "Today" 的行
-    cat output.txt | wc -l        # 统计文件的总行数
+    bash echo.sh | grep Today    # Filter command output for matching lines
+    cat output.txt | wc -l       # Count total line numbers
     ```
 
-* **`tee` 分流命令**
-  * **双向输出**: `tee` 命令用于拆分数据流，它在接收 stdin 数据的同时，能将数据**同时**打印到终端界面并写入到一个或多个文件中。
-  * **常用语法与示例**:
-    * 覆盖写入文件并显示到终端：
+* **The `tee` Command**
+  * Splits an input stream by writing standard input to standard output while simultaneously logging to one or more files.
+  * Examples:
+    * Standard file write and console output:
       ```bash
       /bin/bash echo.sh | tee output.txt | grep Today
       ```
-    * 追加模式写入文件（`-a` 参数，类似于 `>>`）：
+    * Append mode (`-a` flag):
       ```bash
       echo "System status update" | tee -a log.txt
       ```
 
-* **嵌入式文本 (Here Document)**
-  * 使用 `<<EOF` 或 `<<TAG` 在脚本中嵌入多行文本作为命令输入：
+* **Here Documents (`<<EOF`)**
+  * Embed multiline input directly within a script:
     ```bash
-    cat <<EOF "#" "$1" "$target_file" "File "Progress: "\033[31mError: "\033[32mFile "] # #!/bin/bash ### && '$target_file' --- -A -e -n -r -z 0.05 1 100%" 2 EOF No SYS_NAME="AdminScript" [ [" [[ ]; ]]; ``` ```bash and check_and_process check_and_process() declare do done echo else exists fi file for hello i if in is local missing not or process.log readable." readable.\033[0m" readonly return server_config server_config[host]="127.0.0.1" server_config[port]="8080" sleep specified.\033[0m" target_file="$1" tee then world { {1..10}; | } 八、 声明只读变量与关联数组 定义处理函数 简单模拟处理进度，将进度同时输出至终端与日志文件 综合示例 调用函数并传递命令行参数>
+    cat <<EOF "#" "$1" "$target_file" "File "Progress: "\033[31mError: "\033[32mFile "] # #!/bin/bash ### && '$target_file' --- -A -a -e -n -r -z 0.05 1 100%" 2 8. Complete Declare Define EOF Example Invoke Line No Practical Progress SYS_NAME="AdminScript" [ [" [[ ]; ]]; ``` ```bash and argument array associative bar check_and_process check_and_process() command-line declare do done echo else exists fi file for function i if in is local logging missing or pipeline process.log readable.\033[0m" readonly return server_config server_config[host]="127.0.0.1" server_config[port]="8080" simulation sleep specified.\033[0m" target target_file="$1" tee then unreadable." validation variables with { {1..10}; | }>
